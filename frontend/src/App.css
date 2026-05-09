@@ -1,0 +1,373 @@
+import { useEffect, useState } from "react";
+import axios from "axios";
+import "./App.css";
+
+function App() {
+  const [projects, setProjects] = useState([]);
+  const [form, setForm] = useState({
+    title: "",
+    image: "",
+    category: "",
+    tools: "",
+    description: "",
+    link: "",
+  });
+
+  const fetchProjects = async () => {
+    try {
+      const res = await axios.get("http://localhost:5050/api/projects");
+      setProjects(res.data);
+    } catch (error) {
+      console.log(error);
+      alert("Could not load projects. Make sure backend is running.");
+    }
+  };
+
+  const addProject = async () => {
+    if (!form.title || !form.image || !form.description) {
+      alert("Please fill title, image, and description");
+      return;
+    }
+
+    try {
+      await axios.post("http://localhost:5050/api/projects", form);
+      setForm({
+        title: "",
+        image: "",
+        category: "",
+        tools: "",
+        description: "",
+        link: "",
+      });
+      fetchProjects();
+    } catch (error) {
+      console.log(error);
+      alert("Could not add project. Check backend and MongoDB connection.");
+    }
+  };
+
+  const deleteProject = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5050/api/projects/${id}`);
+      fetchProjects();
+    } catch (error) {
+      console.log(error);
+      alert("Could not delete project.");
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  return (
+    <div className="app">
+      <section className="hero">
+        <p className="tag">Creator Portfolio CMS</p>
+        <h1>Manage your creative projects visually.</h1>
+        <p className="subtitle">
+          Add your UI/UX, branding, web design, and creative projects in one
+          simple portfolio dashboard.
+        </p>
+      </section>
+
+      <section className="form-section">
+        <h2>Add New Project</h2>
+
+        <div className="form-grid">
+          <input
+            placeholder="Project title"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+
+          <input
+            placeholder="Image URL"
+            value={form.image}
+            onChange={(e) => setForm({ ...form, image: e.target.value })}
+          />
+
+          <input
+            placeholder="Category e.g. UI/UX Design"
+            value={form.category}
+            onChange={(e) => setForm({ ...form, category: e.target.value })}
+          />
+
+          <input
+            placeholder="Tools e.g. Figma, React, Branding"
+            value={form.tools}
+            onChange={(e) => setForm({ ...form, tools: e.target.value })}
+          />
+
+          <input
+            placeholder="Live project link"
+            value={form.link}
+            onChange={(e) => setForm({ ...form, link: e.target.value })}
+          />
+
+          <textarea
+            placeholder="Project description"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+
+          <button onClick={addProject}>Add Project</button>
+        </div>
+      </section>
+
+      <section className="projects">
+        <div className="section-header">
+          <h2>Portfolio Projects</h2>
+          <p>{projects.length} project(s) added</p>
+        </div>
+
+        <div className="project-grid">
+          {projects.map((project) => (
+            <div className="project-card" key={project._id}>
+              <img src={project.image} alt={project.title} />
+
+              <div className="project-content">
+                <span>{project.category || "Creative Project"}</span>
+                <h3>{project.title}</h3>
+                <p>{project.description}</p>
+                <small>{project.tools}</small>
+
+                <div className="actions">
+                  {project.link && (
+                    <a href={project.link} target="_blank" rel="noreferrer">
+                      View Project
+                    </a>
+                  )}
+
+                  <button onClick={() => deleteProject(project._id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default App;
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0f0f11;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.app {
+  min-height: 100vh;
+  padding: 42px;
+  background:
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.35), transparent 28%),
+    radial-gradient(circle at top right, rgba(236, 72, 153, 0.18), transparent 25%),
+    #0f0f11;
+}
+
+.hero {
+  max-width: 900px;
+  padding: 55px 0 70px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+
+.tag {
+  color: #c4b5fd;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+h1 {
+  font-size: clamp(42px, 7vw, 82px);
+  line-height: 0.95;
+  margin: 0;
+  letter-spacing: -3px;
+}
+
+.subtitle {
+  max-width: 680px;
+  color: #c7c7c7;
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 22px auto 0;
+}
+
+.form-section {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  padding: 34px;
+  border-radius: 30px;
+  max-width: 1000px;
+  margin: 0 auto 70px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.form-section h2,
+.projects h2 {
+  margin-top: 0;
+  letter-spacing: -0.5px;
+  text-align: center;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 15px 16px;
+  border-radius: 16px;
+  border: 1px solid #333339;
+  outline: none;
+  background: #101014;
+  color: white;
+  font-size: 15px;
+}
+
+textarea {
+  min-height: 100px;
+  grid-column: span 2;
+  resize: vertical;
+}
+
+button {
+  padding: 15px 18px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7c3aed, #db2777);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+.section-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+.section-header p {
+  color: #a1a1aa;
+  margin: 0;
+}
+
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.project-card {
+  background: #18181b;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid #2a2a2d;
+  transition: 0.3s ease;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.26);
+}
+
+.project-card:hover {
+  transform: translateY(-8px);
+  border-color: #7c3aed;
+}
+
+.project-card img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  display: block;
+}
+
+.project-content {
+  padding: 22px;
+}
+
+.project-content span {
+  display: inline-block;
+  color: #ddd6fe;
+  background: rgba(124, 58, 237, 0.2);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 11px;
+  border-radius: 999px;
+}
+
+.project-content h3 {
+  margin: 14px 0 8px;
+  font-size: 24px;
+}
+
+.project-content p {
+  color: #cfcfcf;
+  line-height: 1.55;
+}
+
+.project-content small {
+  color: #a1a1aa;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.actions a {
+  color: white;
+  text-decoration: none;
+  background: #27272a;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+.actions button {
+  background: #ef4444;
+  padding: 12px 14px;
+}
+
+@media (max-width: 700px) {
+  .app {
+    padding: 22px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  textarea {
+    grid-column: span 1;
+  }
+
+  .section-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
